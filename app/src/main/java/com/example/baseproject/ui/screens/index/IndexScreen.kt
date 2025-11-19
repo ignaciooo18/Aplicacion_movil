@@ -32,7 +32,7 @@ import com.example.baseproject.ui.theme.petSafe
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IndexScreen(
-    onLoginClick: () -> Unit // Acción para cuando se presiona el botón de login
+    onLoginClick: () -> Unit // Acción para cuando se presiona el botón de Registro
 ) {
     Scaffold(
         topBar = {

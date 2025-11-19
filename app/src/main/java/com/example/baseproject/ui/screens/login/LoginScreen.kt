@@ -142,7 +142,7 @@ fun LoginScreen (
                         enabled = isFormValid, // El botón solo se activa si el formulario es válido
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Registrarse")
+                        Text("Iniciar Sesión")
                     }
                 }
             }
