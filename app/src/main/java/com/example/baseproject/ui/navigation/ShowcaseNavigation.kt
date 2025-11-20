@@ -1,8 +1,12 @@
 package com.example.baseproject.ui.navigation
 
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -27,7 +31,21 @@ import com.example.baseproject.ui.screens.theming.ThemingScreen
 import com.example.baseproject.ui.screens.veterinariodet.VeterinarioDetalleScreen
 import com.example.baseproject.ui.screens.veterinarios.VeterinarioScreen
 
+// 💡 IMPORTACIONES NECESARIAS PARA TUS PANTALLAS Y MOCKS
+import com.example.baseproject.ui.screens.products.* import com.example.baseproject.ui.screens.profile.*
+import com.example.baseproject.ui.screens.reviews.*
+import android.net.Uri
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+
+
+// MOCKS DE DATOS (Asumimos que están accesibles aquí)
+val mockUserForNav = mockUser
+val mockPetForNav = mockPet
+val mockProductsForNav = mockProducts
+
 object ShowcaseRoutes {
+    // Rutas originales
     const val MAIN = "main"
     const val BUTTONS = "buttons"
     const val TEXT_FIELDS = "textfields"
@@ -45,20 +63,36 @@ object ShowcaseRoutes {
     const val INICIO = "inicio"
     const val VETERINARIOS = "veterinarios"
     const val VETERINARIO_DETALLE = "veterinarios/{vetId}"
+
+    // TUS NUEVAS RUTAS Y RUTAS DE NACHO
+    const val PRODUCTS = "products_route"
+    const val PROFILE = "profile_route"
+    const val ADD_REVIEW = "add_review_route"
+    const val EDIT_PROFILE = "edit_profile_route"
+    const val REGISTER = "register_route"
+    const val VER_VETERINARIOS = "ver_veterinarios_route"
+    const val AGENDAR_CITA = "agendar_veterinario_route"
 }
 
-// --- INICIO DE LA CORRECCIÓN ---
-// 1. La anotación se aplica a la función COMPLETA que contiene la llamada peligrosa.
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ShowcaseNavigation(
     navController: NavHostController = rememberNavController()
 ) {
+    // 💡 LÓGICA PARA EL ACCESO A GALERÍA/ARCHIVOS (Resuelve el Punto 2)
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
+
     NavHost(
         navController = navController,
-        startDestination = ShowcaseRoutes.INDEX // Recomiendo empezar en INICIO para probar el flujo completo
+        startDestination = ShowcaseRoutes.MAIN
     ) {
-        composable(ShowcaseRoutes.MAIN) { // Esta es la pantalla original del showcase
+        composable(ShowcaseRoutes.MAIN) {
             MainScreen(
                 onCategoryClick = { route ->
                     navController.navigate(route)
@@ -66,12 +100,80 @@ fun ShowcaseNavigation(
             )
         }
 
-        composable(route = ShowcaseRoutes.INICIO) {
+        // ----------------------------------------------------
+        // 1. PANTALLAS IMPLEMENTADAS POR TI (CON LOGOUT Y GALERÍA)
+        // ----------------------------------------------------
+
+        // PANTALLA DE PERFIL
+        composable(ShowcaseRoutes.PROFILE) {
+            ProfileScreen(
+                user = mockUserForNav,
+                pet = mockPetForNav,
+                onLogoutClick = {
+                    navController.navigate(ShowcaseRoutes.LOGIN) {
+                        popUpTo(ShowcaseRoutes.MAIN) { inclusive = true } // LOGOUT SEGURO
+                    }
+                },
+                onEditProfileClick = { navController.navigate(ShowcaseRoutes.EDIT_PROFILE) }
+            )
+        }
+
+        // PANTALLA DE PRODUCTOS
+        composable(ShowcaseRoutes.PRODUCTS) {
+            ProductsScreen(
+                products = mockProductsForNav,
+                onProductClick = { /* Acción para ir al detalle */ },
+                onSearch = { query -> /* Lógica de búsqueda */ },
+                onLogoutClick = {
+                    navController.navigate(ShowcaseRoutes.LOGIN) {
+                        popUpTo(ShowcaseRoutes.MAIN) { inclusive = true } // LOGOUT SEGURO
+                    }
+                }
+            )
+        }
+
+        // PANTALLA AÑADIR RESEÑA
+        composable(ShowcaseRoutes.ADD_REVIEW) {
+            AddReviewScreen(
+                onSubmitReview = { _, _, _, _, _ -> /* Lógica de envío */ },
+                onCancel = { navController.popBackStack() },
+                onLogoutClick = {
+                    navController.navigate(ShowcaseRoutes.LOGIN) {
+                        popUpTo(ShowcaseRoutes.MAIN) { inclusive = true } // LOGOUT SEGURO
+                    }
+                },
+                onOpenDrawer = { /* Lógica para abrir el drawer */ },
+                onSelectFile = {
+                    // ACCIÓN DE GALERÍA: Lanza el selector de archivos
+                    imagePickerLauncher.launch("image/*")
+                }
+            )
+        }
+
+        // ----------------------------------------------------
+        // 2. RUTAS PENDIENTES/DE NACHO (PLACEHOLDERS)
+        // ----------------------------------------------------
+        composable(ShowcaseRoutes.EDIT_PROFILE) { /* EditProfileScreen Placeholder */ }
+        composable(ShowcaseRoutes.REGISTER) { /* RegisterScreen Placeholder */ }
+        composable(ShowcaseRoutes.VER_VETERINARIOS) { /* VerVeterinariosScreen Placeholder */ }
+        composable(ShowcaseRoutes.AGENDAR_CITA) { /* AgendarCitaScreen Placeholder */ }
+
+        // ----------------------------------------------------
+        // 3. RUTAS ORIGINALES Y DE NACHO (COMPLETAS)
+        // ----------------------------------------------------
+
+        composable(ShowcaseRoutes.INDEX) {
+            IndexScreen(
+                onLoginClick = { navController.navigate(ShowcaseRoutes.LOGIN) }
+            )
+        }
+
+        composable(ShowcaseRoutes.INICIO) {
             InicioScreen(
                 onLoginClick = { navController.navigate(ShowcaseRoutes.LOGIN) },
-                onReviewsClick = { /* navController.navigate("Ruta_de_Reseñas") */ },
+                onReviewsClick = { navController.navigate(ShowcaseRoutes.ADD_REVIEW) },
                 onVetsClick = { navController.navigate(ShowcaseRoutes.VETERINARIOS) },
-                onProductsClick = { /* navController.navigate("Ruta_de_Ofertas") */ }
+                onProductsClick = { navController.navigate(ShowcaseRoutes.PRODUCTS) }
             )
         }
 
@@ -84,13 +186,6 @@ fun ShowcaseNavigation(
             )
         }
 
-        composable(route = ShowcaseRoutes.INDEX) {
-            IndexScreen(
-                onLoginClick = { navController.navigate(ShowcaseRoutes.LOGIN) }
-            )
-        }
-
-        // 2. Ya no se necesita la anotación aquí.
         composable(
             route = ShowcaseRoutes.VETERINARIO_DETALLE,
             arguments = listOf(navArgument("vetId") { type = NavType.IntType })
@@ -103,7 +198,6 @@ fun ShowcaseNavigation(
                 )
             }
         }
-        // --- FIN DE LA CORRECCIÓN ---
 
         composable(route = ShowcaseRoutes.LOGIN) {
             LoginScreen(
@@ -116,7 +210,7 @@ fun ShowcaseNavigation(
             )
         }
 
-        // --- El resto de las pantallas del showcase (sin cambios) ---
+        // --- El resto de las pantallas originales del showcase ---
         composable(ShowcaseRoutes.BUTTONS) { ButtonsScreen(onBackClick = { navController.popBackStack() }) }
         composable(ShowcaseRoutes.TEXT_FIELDS) { TextFieldsScreen(onBackClick = { navController.popBackStack() }) }
         composable(ShowcaseRoutes.CARDS) { CardsScreen(onBackClick = { navController.popBackStack() }) }
